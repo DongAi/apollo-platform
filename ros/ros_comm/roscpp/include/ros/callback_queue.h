@@ -160,7 +160,7 @@ protected:
   };
   typedef std::list<CallbackInfo> L_CallbackInfo;
   typedef std::deque<CallbackInfo> D_CallbackInfo;
-  D_CallbackInfo callbacks_;
+  L_CallbackInfo callbacks_;
   size_t calling_;
   boost::mutex mutex_;
   boost::condition_variable condition_;
@@ -175,8 +175,8 @@ protected:
     , cb_it(callbacks.end())
     {}
     uint64_t calling_in_this_thread;
-    D_CallbackInfo callbacks;
-    D_CallbackInfo::iterator cb_it;
+    L_CallbackInfo callbacks;
+    L_CallbackInfo::iterator cb_it;
   };
   boost::thread_specific_ptr<TLS> tls_;
 

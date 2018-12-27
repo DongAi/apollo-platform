@@ -110,7 +110,7 @@ XmlRpcValue Subscription::getStats()
   boost::mutex::scoped_lock lock(publisher_links_mutex_);
 
   uint32_t cidx = 0;
-  for (V_PublisherLink::iterator c = publisher_links_.begin();
+  for (L_PublisherLink::iterator c = publisher_links_.begin();
        c != publisher_links_.end(); ++c)
   {
     const PublisherLink::Stats& s = (*c)->getStats();
@@ -131,7 +131,7 @@ void Subscription::getInfo(XmlRpc::XmlRpcValue& info)
 {
   boost::mutex::scoped_lock lock(publisher_links_mutex_);
 
-  for (V_PublisherLink::iterator c = publisher_links_.begin();
+  for (L_PublisherLink::iterator c = publisher_links_.begin();
        c != publisher_links_.end(); ++c)
   {
     XmlRpcValue curr_info;
@@ -166,7 +166,7 @@ void Subscription::dropAllConnections()
 {
   // Swap our subscribers list with a local one so we can only lock for a short period of time, because a
   // side effect of our calling drop() on connections can be re-locking the subscribers mutex
-  V_PublisherLink localsubscribers;
+  L_PublisherLink localsubscribers;
 
   {
     boost::mutex::scoped_lock lock(publisher_links_mutex_);
@@ -174,8 +174,8 @@ void Subscription::dropAllConnections()
     localsubscribers.swap(publisher_links_);
   }
 
-  V_PublisherLink::iterator it = localsubscribers.begin();
-  V_PublisherLink::iterator end = localsubscribers.end();
+  L_PublisherLink::iterator it = localsubscribers.begin();
+  L_PublisherLink::iterator end = localsubscribers.end();
   for (;it != end; ++it)
   {
     (*it)->drop();
@@ -243,7 +243,7 @@ bool Subscription::pubUpdate(const V_string& new_pubs)
     }
 
     ss << " already have these connections: ";
-    for (V_PublisherLink::iterator spc = publisher_links_.begin();
+    for (L_PublisherLink::iterator spc = publisher_links_.begin();
          spc!= publisher_links_.end(); ++spc)
     {
       ss << (*spc)->getPublisherXMLRPCURI() << ", ";
@@ -261,14 +261,14 @@ bool Subscription::pubUpdate(const V_string& new_pubs)
   }
 
   V_string additions;
-  V_PublisherLink subtractions;
-  V_PublisherLink to_add;
+  L_PublisherLink subtractions;
+  L_PublisherLink to_add;
   // could use the STL set operations... but these sets are so small
   // it doesn't really matter.
   {
     boost::mutex::scoped_lock lock(publisher_links_mutex_);
 
-    for (V_PublisherLink::iterator spc = publisher_links_.begin();
+    for (L_PublisherLink::iterator spc = publisher_links_.begin();
          spc!= publisher_links_.end(); ++spc)
     {
       bool found = false;
@@ -291,7 +291,7 @@ bool Subscription::pubUpdate(const V_string& new_pubs)
     for (V_string::const_iterator up_i  = new_pubs.begin(); up_i != new_pubs.end(); ++up_i)
     {
       bool found = false;
-      for (V_PublisherLink::iterator spc = publisher_links_.begin();
+      for (L_PublisherLink::iterator spc = publisher_links_.begin();
            !found && spc != publisher_links_.end(); ++spc)
       {
         if (urisEqual(*up_i, (*spc)->getPublisherXMLRPCURI()))
@@ -323,7 +323,7 @@ bool Subscription::pubUpdate(const V_string& new_pubs)
     }
   }
 
-  for (V_PublisherLink::iterator i = subtractions.begin(); i != subtractions.end(); ++i)
+  for (L_PublisherLink::iterator i = subtractions.begin(); i != subtractions.end(); ++i)
   {
 	const PublisherLinkPtr& link = *i;
     if (link->getPublisherXMLRPCURI() != XMLRPCManager::instance()->getServerURI())
@@ -629,7 +629,7 @@ uint32_t Subscription::handleMessage(const SerializedMessage& m, bool ser, bool 
 
   ros::Time receipt_time = ros::Time::now();
 
-  for (V_CallbackInfo::iterator cb = callbacks_.begin(); cb != callbacks_.end(); ++cb)
+  for (L_CallbackInfo::iterator cb = callbacks_.begin(); cb != callbacks_.end(); ++cb)
   {
     const CallbackInfoPtr& info = *cb;
 
@@ -703,7 +703,7 @@ uint32_t Subscription::handleMessage(const SerializedMessage& m, bool ser, bool 
   else
   {
     boost::mutex::scoped_lock lock(publisher_links_mutex_);
-    for (V_PublisherLink::iterator it = publisher_links_.begin(); it != publisher_links_.end(); ++it)
+    for (L_PublisherLink::iterator it = publisher_links_.begin(); it != publisher_links_.end(); ++it)
     {
       if ((*it)->isLatched())
       {
@@ -773,8 +773,8 @@ bool Subscription::addCallback(const SubscriptionCallbackHelperPtr& helper, cons
     {
       boost::mutex::scoped_lock lock(publisher_links_mutex_);
 
-      V_PublisherLink::iterator it = publisher_links_.begin();
-      V_PublisherLink::iterator end = publisher_links_.end();
+      L_PublisherLink::iterator it = publisher_links_.begin();
+      L_PublisherLink::iterator end = publisher_links_.end();
       for (; it != end;++it)
       {
         const PublisherLinkPtr& link = *it;
@@ -808,7 +808,7 @@ void Subscription::removeCallback(const SubscriptionCallbackHelperPtr& helper)
   CallbackInfoPtr info;
   {
     boost::mutex::scoped_lock cbs_lock(callbacks_mutex_);
-    for (V_CallbackInfo::iterator it = callbacks_.begin();
+    for (L_CallbackInfo::iterator it = callbacks_.begin();
          it != callbacks_.end(); ++it)
     {
       if ((*it)->helper_ == helper)
@@ -852,7 +852,7 @@ void Subscription::removePublisherLink(const PublisherLinkPtr& pub_link)
 {
   boost::mutex::scoped_lock lock(publisher_links_mutex_);
 
-  V_PublisherLink::iterator it = std::find(publisher_links_.begin(), publisher_links_.end(), pub_link);
+  L_PublisherLink::iterator it = std::find(publisher_links_.begin(), publisher_links_.end(), pub_link);
   if (it != publisher_links_.end())
   {
     publisher_links_.erase(it);
@@ -867,7 +867,7 @@ void Subscription::removePublisherLink(const PublisherLinkPtr& pub_link)
 void Subscription::getPublishTypes(bool& ser, bool& nocopy, const std::type_info& ti)
 {
   boost::mutex::scoped_lock lock(callbacks_mutex_);
-  for (V_CallbackInfo::iterator cb = callbacks_.begin();
+  for (L_CallbackInfo::iterator cb = callbacks_.begin();
        cb != callbacks_.end(); ++cb)
   {
     const CallbackInfoPtr& info = *cb;

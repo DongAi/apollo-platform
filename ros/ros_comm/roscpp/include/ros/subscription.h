@@ -211,13 +211,14 @@ private:
   };
   typedef boost::shared_ptr<CallbackInfo> CallbackInfoPtr;
   typedef std::vector<CallbackInfoPtr> V_CallbackInfo;
+  typedef std::list<CallbackInfoPtr> L_CallbackInfo;
 
   std::string name_;
   boost::mutex md5sum_mutex_;
   std::string md5sum_;
   std::string datatype_;
   boost::mutex callbacks_mutex_;
-  V_CallbackInfo callbacks_;
+  L_CallbackInfo callbacks_;
   uint32_t nonconst_callbacks_;
 
   bool dropped_;
@@ -229,7 +230,8 @@ private:
   boost::mutex pending_connections_mutex_;
 
   typedef std::vector<PublisherLinkPtr> V_PublisherLink;
-  V_PublisherLink publisher_links_;
+  typedef std::list<PublisherLinkPtr> L_PublisherLink;
+  L_PublisherLink publisher_links_;
   boost::mutex publisher_links_mutex_;
 
   TransportHints transport_hints_;
@@ -266,7 +268,7 @@ public:
     return helper_;
   }
 
-  std::vector<PublisherLinkPtr> get_publisher_links()
+  L_PublisherLink get_publisher_links()
   {
     return publisher_links_;
   }
